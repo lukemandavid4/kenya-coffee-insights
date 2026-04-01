@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { countyWeatherData, countyProduction } from "@/data/mockData";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, LineChart,
+  ResponsiveContainer, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useState } from "react";
