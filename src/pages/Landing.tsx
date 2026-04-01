@@ -36,7 +36,7 @@ export default function Landing() {
             <span className="text-xs font-medium text-primary">AI-Powered Analytics</span>
           </div>
           <h1 className="font-display text-4xl font-bold leading-tight text-foreground md:text-6xl lg:text-7xl">
-            Kenya Coffee
+            Deco Coffee
             <br />
             <span className="text-gradient-primary">Intelligence Platform</span>
           </h1>
@@ -86,7 +86,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border/30 px-6 py-6 text-center">
         <p className="text-xs text-muted-foreground">
-          © 2025 Kenya Coffee Intelligence Platform. Data-driven decisions for the coffee industry.
+          © 2025 Deco Coffee Intelligence Platform. Data-driven decisions for the coffee industry.
         </p>
       </footer>
     </div>
