@@ -49,7 +49,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-display text-sm font-bold tracking-tight text-foreground">
-                KCIP
+                DCIP
               </span>
               <span className="text-[10px] text-muted-foreground">
                 Coffee Intelligence
