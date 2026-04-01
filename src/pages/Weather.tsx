@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { countyWeatherData, countyProduction } from "@/data/mockData";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, LineChart,
+  ResponsiveContainer, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -115,13 +115,13 @@ export default function Weather() {
             {selected} — Humidity Levels (%)
           </h3>
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={data}>
+            <ComposedChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 16%)" />
               <XAxis dataKey="month" tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} />
               <YAxis tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} domain={[40, 100]} />
               <Tooltip {...ts} />
               <Area type="monotone" dataKey="humidity" fill="hsl(152 60% 45% / 0.1)" stroke="hsl(152 60% 45%)" strokeWidth={2} />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </motion.div>
 
