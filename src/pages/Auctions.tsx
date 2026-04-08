@@ -5,23 +5,79 @@ import {
   ResponsiveContainer, AreaChart, Area, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
+import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 
 const ts = {
   contentStyle: { background: "hsl(222 41% 9%)", border: "1px solid hsl(222 30% 16%)", borderRadius: "8px", fontSize: "12px" },
   labelStyle: { color: "hsl(210 40% 93%)" },
 };
 
+// Generate extended forecast with different timeframes
+const forecast7 = forecastData.slice(0, 2);
+const forecast30 = forecastData.slice(0, 4);
+const forecast90 = forecastData;
+
 export default function Auctions() {
+  const latestPrice = auctionData[auctionData.length - 1].gradeAA;
+  const prevPrice = auctionData[auctionData.length - 2].gradeAA;
+  const change = ((latestPrice - prevPrice) / prevPrice * 100).toFixed(1);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Auction Analytics</h1>
-          <p className="text-sm text-muted-foreground">Nairobi Coffee Exchange price trends & AI predictions</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">Price Forecast</h1>
+          <p className="text-sm text-muted-foreground">AI-predicted coffee auction prices for Grade AA, AB, PB, C</p>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-          <h3 className="mb-4 font-display text-sm font-semibold text-foreground">Historical Price by Grade (KES/bag)</h3>
+        {/* Prediction KPIs */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Current AA Price</p>
+            <p className="mt-1 font-display text-2xl font-bold text-foreground">KES {latestPrice.toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="h-3 w-3 text-chart-up" />
+              <span className="text-xs text-chart-up">+{change}% vs last month</span>
+            </div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">7-Day Prediction</p>
+            <p className="mt-1 font-display text-2xl font-bold text-primary">KES {forecastData[0].predicted.toLocaleString()}</p>
+            <span className="text-xs text-chart-up">+{((forecastData[0].predicted - latestPrice) / latestPrice * 100).toFixed(1)}%</span>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">30-Day Prediction</p>
+            <p className="mt-1 font-display text-2xl font-bold text-accent">KES {forecastData[2].predicted.toLocaleString()}</p>
+            <span className="text-xs text-chart-up">+{((forecastData[2].predicted - latestPrice) / latestPrice * 100).toFixed(1)}%</span>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">90-Day Prediction</p>
+            <p className="mt-1 font-display text-2xl font-bold text-chart-blue">KES {forecastData[5].predicted.toLocaleString()}</p>
+            <span className="text-xs text-chart-up">+{((forecastData[5].predicted - latestPrice) / latestPrice * 100).toFixed(1)}%</span>
+          </motion.div>
+        </div>
+
+        {/* AI Forecast chart */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-5">
+          <h3 className="mb-1 font-display text-sm font-semibold text-foreground">AI Price Prediction — Grade AA (KES/bag)</h3>
+          <p className="mb-4 text-xs text-muted-foreground">Predicted price with 90% confidence interval • LSTM + Prophet ensemble</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={forecastData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 16%)" />
+              <XAxis dataKey="date" tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} />
+              <YAxis tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} domain={["dataMin - 2000", "dataMax + 2000"]} />
+              <Tooltip {...ts} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Area type="monotone" dataKey="upper" stroke="none" fill="hsl(152 60% 45% / 0.1)" name="Upper Bound" />
+              <Area type="monotone" dataKey="lower" stroke="none" fill="hsl(152 60% 45% / 0.1)" name="Lower Bound" />
+              <Line type="monotone" dataKey="predicted" stroke="hsl(152 60% 45%)" strokeWidth={2.5} strokeDasharray="6 3" dot={{ r: 4 }} name="Predicted" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Historical + predicted overlay */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5">
+          <h3 className="mb-4 font-display text-sm font-semibold text-foreground">Historical Prices + Forward Curve</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={auctionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 16%)" />
@@ -37,54 +93,15 @@ export default function Auctions() {
           </ResponsiveContainer>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-5">
-          <h3 className="mb-1 font-display text-sm font-semibold text-foreground">AI Price Forecast — Grade AA (KES/bag)</h3>
-          <p className="mb-4 text-xs text-muted-foreground">Predicted range with 90% confidence interval</p>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={forecastData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 16%)" />
-              <XAxis dataKey="date" tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} />
-              <YAxis tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }} domain={["dataMin - 2000", "dataMax + 2000"]} />
-              <Tooltip {...ts} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="upper" stroke="none" fill="hsl(152 60% 45% / 0.1)" name="Upper Bound" />
-              <Area type="monotone" dataKey="lower" stroke="none" fill="hsl(152 60% 45% / 0.1)" name="Lower Bound" />
-              <Line type="monotone" dataKey="predicted" stroke="hsl(152 60% 45%)" strokeWidth={2.5} strokeDasharray="6 3" dot={{ r: 4 }} name="Predicted" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* Recent auction table */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card overflow-hidden">
-          <div className="border-b border-border/50 px-5 py-3">
-            <h3 className="font-display text-sm font-semibold text-foreground">Recent Auction Results</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/30">
-                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Date</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">AA</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">AB</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">PB</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">C</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Volume</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auctionData.slice().reverse().map((row) => (
-                  <tr key={row.date} className="border-b border-border/20 transition-colors hover:bg-secondary/30">
-                    <td className="px-5 py-3 font-medium text-foreground">{row.date}</td>
-                    <td className="px-5 py-3 text-right text-chart-up">{row.gradeAA.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-chart-blue">{row.gradeAB.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-chart-accent">{row.gradePB.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-muted-foreground">{row.gradeC.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-foreground">{row.volume.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* AI prediction insight */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card border border-primary/20 p-5">
+          <h3 className="mb-2 font-display text-sm font-semibold text-primary">AI Price Prediction Summary</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Our ensemble model (LSTM + Prophet + XGBoost) predicts Grade AA prices will reach <span className="font-semibold text-primary">KES {forecastData[5].predicted.toLocaleString()}/bag</span> within 
+            90 days, representing a {((forecastData[5].predicted - latestPrice) / latestPrice * 100).toFixed(1)}% increase. 
+            Key drivers include reduced supply from drought-affected regions, rising global arabica demand, and seasonal harvest patterns. 
+            The model recommends <span className="font-semibold text-accent">holding inventory</span> for sellers to maximize returns during the predicted price peak in Q2 2025.
+          </p>
         </motion.div>
       </div>
     </DashboardLayout>
