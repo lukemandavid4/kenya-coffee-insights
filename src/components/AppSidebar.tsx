@@ -1,43 +1,34 @@
 import {
-  BarChart3,
-  TrendingUp,
-  Map,
-  CloudRain,
-  Globe,
-  Brain,
-  Home,
-  Coffee,
+  BarChart3, TrendingUp, Map, CloudRain, Globe, Brain, Coffee, LogOut, Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: BarChart3 },
-  { title: "Auction Analytics", url: "/auctions", icon: TrendingUp },
+  { title: "Predictions", url: "/dashboard", icon: BarChart3 },
+  { title: "Price Forecast", url: "/auctions", icon: TrendingUp },
   { title: "Production Forecast", url: "/production", icon: Coffee },
-  { title: "County Map", url: "/map", icon: Map },
-  { title: "Weather Impact", url: "/weather", icon: CloudRain },
-  { title: "Global Market", url: "/market", icon: Globe },
-  { title: "AI Insights", url: "/insights", icon: Brain },
+  { title: "Kenya Map", url: "/map", icon: Map },
+  { title: "Weather Forecast", url: "/weather", icon: CloudRain },
+  { title: "Market Forecast", url: "/market", icon: Globe },
+  { title: "AI Predictions", url: "/insights", icon: Brain },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -48,12 +39,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-display text-sm font-bold tracking-tight text-foreground">
-                DCIP
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                Coffee Intelligence
-              </span>
+              <span className="font-display text-sm font-bold tracking-tight text-foreground">DCIP</span>
+              <span className="text-[10px] text-muted-foreground">Coffee Predictions</span>
             </div>
           )}
         </div>
@@ -61,7 +48,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
-            Analytics
+            Forecasting
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -84,6 +71,18 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="border-t border-border/50 p-3">
+        {!collapsed && user && (
+          <p className="mb-2 truncate text-xs text-muted-foreground">{user.email}</p>
+        )}
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          {!collapsed && "Logout"}
+        </button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
