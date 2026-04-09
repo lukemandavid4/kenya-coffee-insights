@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { KenyaMap } from "@/components/KenyaMap";
 import { countyProduction } from "@/data/mockData";
-import { fetchForecast, getApiKey, getAllCounties } from "@/services/weatherApi";
+import { fetchForecast, getAllCounties } from "@/services/weatherApi";
 import { generateCountyPrediction, type CountyPrediction } from "@/services/predictionEngine";
 import { motion } from "framer-motion";
 import { MapPin, TrendingUp, TrendingDown, Droplets, AlertTriangle, CloudRain } from "lucide-react";
@@ -20,7 +20,6 @@ export default function CountyMap() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getApiKey()) return;
     setLoading(true);
     const load = async () => {
       const counties = getAllCounties();
@@ -58,9 +57,8 @@ export default function CountyMap() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Map */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-card p-4">
-            <h3 className="mb-3 font-display text-sm font-semibold text-foreground">Coffee Producing Regions</h3>
+            <h3 className="mb-3 font-display text-sm font-semibold text-foreground">Republic of Kenya</h3>
             <KenyaMap
               selectedCounty={selected}
               onSelectCounty={setSelected}
@@ -68,7 +66,6 @@ export default function CountyMap() {
             />
           </motion.div>
 
-          {/* County Detail */}
           <motion.div
             key={selected}
             initial={{ opacity: 0, x: 20 }}
@@ -117,7 +114,6 @@ export default function CountyMap() {
               </div>
             </div>
 
-            {/* Prediction card */}
             {pred && (
               <div className={`rounded-xl border p-4 ${riskBg[pred.weatherRisk]}`}>
                 <div className="flex items-center gap-2 mb-2">
@@ -141,14 +137,6 @@ export default function CountyMap() {
                     <li key={i} className="text-xs text-muted-foreground">• {f}</li>
                   ))}
                 </ul>
-              </div>
-            )}
-
-            {!pred && !loading && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Add your OpenWeather API key in the Dashboard to see real-time weather predictions for {selected}.
-                </p>
               </div>
             )}
           </motion.div>
