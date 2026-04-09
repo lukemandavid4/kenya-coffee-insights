@@ -1,4 +1,6 @@
-// OpenWeather API service for fetching real weather data
+// OpenWeather API service - proxied through Supabase Edge Function
+
+import { supabase } from "@/integrations/supabase/client";
 
 const COUNTY_COORDS: Record<string, { lat: number; lon: number }> = {
   Nyeri:       { lat: -0.4167, lon: 36.9500 },
@@ -32,14 +34,6 @@ export interface CurrentWeather {
   windSpeed: number;
 }
 
-export function getApiKey(): string {
-  return localStorage.getItem("dcip_openweather_key") || "";
-}
-
-export function setApiKey(key: string) {
-  localStorage.setItem("dcip_openweather_key", key);
-}
-
 export function getCountyCoords(county: string) {
   return COUNTY_COORDS[county] || COUNTY_COORDS.Nyeri;
 }
@@ -48,16 +42,22 @@ export function getAllCounties() {
   return Object.keys(COUNTY_COORDS);
 }
 
-export async function fetchCurrentWeather(county: string): Promise<CurrentWeather | null> {
-  const key = getApiKey();
-  if (!key) return null;
+async function callWeatherProxy(endpoint: string, county: string): Promise<any | null> {
   const { lat, lon } = getCountyCoords(county);
+  const { data, error } = await supabase.functions.invoke("weather-proxy", {
+    body: { endpoint, lat, lon },
+  });
+  if (error) {
+    console.error("Weather proxy error:", error);
+    return null;
+  }
+  return data;
+}
+
+export async function fetchCurrentWeather(county: string): Promise<CurrentWeather | null> {
   try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric`
-    );
-    if (!res.ok) return null;
-    const d = await res.json();
+    const d = await callWeatherProxy("weather", county);
+    if (!d || d.error) return null;
     return {
       temp: d.main.temp,
       humidity: d.main.humidity,
@@ -70,17 +70,10 @@ export async function fetchCurrentWeather(county: string): Promise<CurrentWeathe
 }
 
 export async function fetchForecast(county: string): Promise<WeatherForecast[]> {
-  const key = getApiKey();
-  if (!key) return [];
-  const { lat, lon } = getCountyCoords(county);
   try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${key}&units=metric`
-    );
-    if (!res.ok) return [];
-    const d = await res.json();
+    const d = await callWeatherProxy("forecast", county);
+    if (!d || d.error || !d.list) return [];
 
-    // Group by day and aggregate
     const daily: Record<string, any> = {};
     for (const item of d.list) {
       const date = item.dt_txt.split(" ")[0];

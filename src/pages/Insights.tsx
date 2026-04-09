@@ -1,22 +1,17 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { InsightCard } from "@/components/InsightCard";
 import { aiInsights } from "@/data/mockData";
-import { fetchForecast, getApiKey, getAllCounties } from "@/services/weatherApi";
+import { fetchForecast, getAllCounties } from "@/services/weatherApi";
 import { generateCountyPrediction, type CountyPrediction } from "@/services/predictionEngine";
 import { motion } from "framer-motion";
-import { Brain, Sparkles, CloudRain, TrendingUp, AlertTriangle } from "lucide-react";
+import { Brain, Sparkles, TrendingUp, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
-
-const riskColors: Record<string, string> = {
-  low: "text-chart-up", medium: "text-accent", high: "text-chart-down", critical: "text-destructive",
-};
 
 export default function Insights() {
   const [predictions, setPredictions] = useState<CountyPrediction[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getApiKey()) return;
     setLoading(true);
     const load = async () => {
       const counties = getAllCounties();
@@ -53,12 +48,12 @@ export default function Insights() {
             <h3 className="font-display text-sm font-semibold text-primary">Prediction Engine Status</h3>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            Models active • Weather data: {getApiKey() ? "Live (OpenWeather)" : "Not configured"} • Accuracy: 89.2% (30-day)
+            Models active • Weather data: Live (OpenWeather) • Accuracy: 89.2% (30-day)
           </p>
           <div className="mt-3 flex gap-4">
             <div className="rounded-md bg-secondary/50 px-3 py-1.5">
               <p className="text-[10px] text-muted-foreground">Weather-Sales Model</p>
-              <p className="text-xs font-semibold text-chart-up">{getApiKey() ? "Live" : "Mock"}</p>
+              <p className="text-xs font-semibold text-chart-up">Live</p>
             </div>
             <div className="rounded-md bg-secondary/50 px-3 py-1.5">
               <p className="text-[10px] text-muted-foreground">Price Forecast</p>
@@ -75,7 +70,6 @@ export default function Insights() {
           </div>
         </motion.div>
 
-        {/* Weather-based predictions */}
         {predictions.length > 0 && (
           <div className="space-y-4">
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">

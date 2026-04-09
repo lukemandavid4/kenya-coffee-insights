@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { KpiCard } from "@/components/KpiCard";
 import { InsightCard } from "@/components/InsightCard";
 import { aiInsights, countyProduction } from "@/data/mockData";
-import { fetchForecast, getApiKey, setApiKey, getAllCounties } from "@/services/weatherApi";
+import { fetchForecast, getAllCounties } from "@/services/weatherApi";
 import { generateCountyPrediction, type CountyPrediction } from "@/services/predictionEngine";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { AlertTriangle, CloudRain, TrendingDown, TrendingUp, Settings, Key } from "lucide-react";
+import { AlertTriangle, CloudRain, TrendingDown, TrendingUp } from "lucide-react";
 
 const ts = {
   contentStyle: { background: "hsl(222 41% 9%)", border: "1px solid hsl(222 30% 16%)", borderRadius: "8px", fontSize: "12px" },
@@ -25,20 +25,10 @@ const riskColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const [apiKey, setKey] = useState(getApiKey());
-  const [showKeyInput, setShowKeyInput] = useState(!getApiKey());
   const [predictions, setPredictions] = useState<CountyPrediction[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const saveKey = () => {
-    setApiKey(apiKey);
-    setShowKeyInput(false);
-    loadPredictions();
-  };
-
   const loadPredictions = async () => {
-    const key = getApiKey();
-    if (!key) return;
     setLoading(true);
     const counties = getAllCounties();
     const results: CountyPrediction[] = [];
@@ -53,7 +43,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (getApiKey()) loadPredictions();
+    loadPredictions();
   }, []);
 
   const totalPredicted7 = predictions.reduce((s, p) => s + p.predicted7Day, 0);
@@ -70,44 +60,10 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Sales Predictions</h1>
-            <p className="text-sm text-muted-foreground">AI-powered coffee sales forecasts based on real-time weather</p>
-          </div>
-          <button
-            onClick={() => setShowKeyInput(!showKeyInput)}
-            className="flex items-center gap-1.5 rounded-lg border border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Key className="h-3.5 w-3.5" />
-            API Key
-          </button>
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">Sales Predictions</h1>
+          <p className="text-sm text-muted-foreground">AI-powered coffee sales forecasts based on real-time weather</p>
         </div>
-
-        {/* API Key Input */}
-        {showKeyInput && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
-            <p className="mb-2 text-sm font-medium text-foreground">Enter your OpenWeather API Key</p>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Get a free key at{" "}
-              <a href="https://openweathermap.org/api" target="_blank" rel="noopener" className="text-primary underline">
-                openweathermap.org
-              </a>
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setKey(e.target.value)}
-                placeholder="Enter API key..."
-                className="flex-1 rounded-lg border border-input bg-secondary/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
-              />
-              <button onClick={saveKey} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                Save & Load
-              </button>
-            </div>
-          </motion.div>
-        )}
 
         {loading && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
@@ -118,7 +74,6 @@ export default function Dashboard() {
 
         {predictions.length > 0 && (
           <>
-            {/* KPIs */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard label="Predicted 7-Day Sales (MT)" value={totalPredicted7} change={overallChange} index={0} />
               <KpiCard label="Baseline 7-Day Sales (MT)" value={totalBaseline} change={0} index={1} />
@@ -126,7 +81,6 @@ export default function Dashboard() {
               <KpiCard label="Counties Monitored" value={predictions.length} change={0} index={3} />
             </div>
 
-            {/* Alerts */}
             {highRiskCounties.length > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -142,7 +96,6 @@ export default function Dashboard() {
               </motion.div>
             )}
 
-            {/* Chart */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
               <h3 className="mb-4 font-display text-sm font-semibold text-foreground">Predicted vs Baseline Sales by County (MT/week)</h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -158,7 +111,6 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </motion.div>
 
-            {/* County cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {predictions.map((p, i) => (
                 <motion.div key={p.county} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-4">
@@ -188,7 +140,6 @@ export default function Dashboard() {
           </>
         )}
 
-        {/* AI Insights - always visible */}
         <div className="space-y-3">
           <h3 className="font-display text-sm font-semibold text-foreground">AI Market Predictions</h3>
           {aiInsights.slice(0, 3).map((insight, i) => (

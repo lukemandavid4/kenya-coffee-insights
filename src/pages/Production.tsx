@@ -1,13 +1,13 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { countyProduction } from "@/data/mockData";
-import { fetchForecast, getApiKey, getAllCounties } from "@/services/weatherApi";
+import { fetchForecast, getAllCounties } from "@/services/weatherApi";
 import { generateCountyPrediction, type CountyPrediction } from "@/services/predictionEngine";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, CloudRain, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, CloudRain } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const ts = {
@@ -24,7 +24,6 @@ export default function Production() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getApiKey()) return;
     setLoading(true);
     const load = async () => {
       const counties = getAllCounties();
@@ -88,13 +87,7 @@ export default function Production() {
           {countyProduction.map((county, i) => {
             const pred = predictions.find(p => p.county === county.county);
             return (
-              <motion.div
-                key={county.county}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="glass-card p-4"
-              >
+              <motion.div key={county.county} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-display text-sm font-semibold text-foreground">{county.county}</h4>
                   {pred && (
@@ -108,8 +101,6 @@ export default function Production() {
                 <div className="mt-2 flex items-center gap-1">
                   {pred?.salesTrend === "declining" ? (
                     <><TrendingDown className="h-3 w-3 text-chart-down" /><span className="text-xs font-semibold text-chart-down">Declining</span></>
-                  ) : pred?.salesTrend === "increasing" ? (
-                    <><TrendingUp className="h-3 w-3 text-chart-up" /><span className="text-xs font-semibold text-chart-up">+{county.change}%</span></>
                   ) : (
                     <><TrendingUp className="h-3 w-3 text-chart-up" /><span className="text-xs font-semibold text-chart-up">+{county.change}%</span></>
                   )}

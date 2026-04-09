@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { fetchForecast, fetchCurrentWeather, getApiKey, getAllCounties, type WeatherForecast, type CurrentWeather } from "@/services/weatherApi";
+import { fetchForecast, fetchCurrentWeather, getAllCounties, type WeatherForecast, type CurrentWeather } from "@/services/weatherApi";
 import { predictSales, type SalesPrediction } from "@/services/predictionEngine";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { CloudRain, Thermometer, Droplets, MapPin, AlertTriangle, TrendingDown, Wind } from "lucide-react";
+import { CloudRain, Thermometer, Droplets, MapPin, Wind } from "lucide-react";
 
 const ts = {
   contentStyle: { background: "hsl(222 41% 9%)", border: "1px solid hsl(222 30% 16%)", borderRadius: "8px", fontSize: "12px" },
@@ -28,7 +28,6 @@ export default function Weather() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getApiKey()) return;
     setLoading(true);
     const load = async () => {
       const [fc, cur] = await Promise.all([
@@ -45,7 +44,6 @@ export default function Weather() {
 
   const hasData = forecasts.length > 0;
 
-  // Chart data combining weather and sales predictions
   const chartData = forecasts.map((fc, i) => ({
     date: fc.date.slice(5),
     rainfall: fc.rainfall,
@@ -64,7 +62,6 @@ export default function Weather() {
           <p className="text-sm text-muted-foreground">Real-time weather predictions and their impact on coffee sales</p>
         </div>
 
-        {/* County selector */}
         <div className="flex flex-wrap gap-2">
           {counties.map((county) => (
             <button
@@ -82,14 +79,6 @@ export default function Weather() {
           ))}
         </div>
 
-        {!getApiKey() && (
-          <div className="glass-card border border-accent/30 p-4">
-            <p className="text-sm text-muted-foreground">
-              ⚠️ No OpenWeather API key set. Go to the <span className="font-medium text-foreground">Dashboard</span> and add your API key to see real-time forecasts.
-            </p>
-          </div>
-        )}
-
         {loading && (
           <div className="flex items-center gap-3 p-4">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -97,7 +86,6 @@ export default function Weather() {
           </div>
         )}
 
-        {/* Current weather */}
         {current && (
           <motion.div key={selected + "-current"} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 sm:grid-cols-4">
             <div className="glass-card flex items-center gap-4 p-4">
@@ -141,7 +129,6 @@ export default function Weather() {
 
         {hasData && (
           <>
-            {/* Rainfall + predicted sales chart */}
             <motion.div key={selected + "-sales"} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
               <h3 className="mb-4 font-display text-sm font-semibold text-foreground">
                 {selected} — Rainfall vs Predicted Sales
@@ -161,7 +148,6 @@ export default function Weather() {
               </ResponsiveContainer>
             </motion.div>
 
-            {/* Weather impact breakdown */}
             <motion.div key={selected + "-impact"} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5">
               <h3 className="mb-4 font-display text-sm font-semibold text-foreground">
                 {selected} — Temperature & Humidity Forecast
@@ -180,7 +166,6 @@ export default function Weather() {
               </ResponsiveContainer>
             </motion.div>
 
-            {/* Daily prediction table */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card overflow-hidden">
               <div className="border-b border-border/50 px-5 py-3">
                 <h3 className="font-display text-sm font-semibold text-foreground">Daily Sales Prediction — {selected}</h3>
