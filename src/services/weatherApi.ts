@@ -1,4 +1,4 @@
-// OpenWeather API service - proxied through Supabase Edge Function
+// WeatherAPI.com service - proxied through edge function
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -56,15 +56,16 @@ async function callWeatherProxy(endpoint: string, county: string): Promise<any |
 
 export async function fetchCurrentWeather(county: string): Promise<CurrentWeather | null> {
   try {
-    const d = await callWeatherProxy("weather", county);
-    if (!d || d.error) return null;
+    const d = await callWeatherProxy("current", county);
+    if (!d || d.error || !d.current) return null;
+    const c = d.current;
     return {
-      temp: d.main.temp,
-      humidity: d.main.humidity,
-      rainfall: d.rain?.["1h"] || d.rain?.["3h"] || 0,
-      description: d.weather?.[0]?.description || "",
-      icon: d.weather?.[0]?.icon || "01d",
-      windSpeed: d.wind?.speed || 0,
+      temp: c.temp_c,
+      humidity: c.humidity,
+      rainfall: c.precip_mm || 0,
+      description: c.condition?.text || "",
+      icon: c.condition?.icon || "",
+      windSpeed: c.wind_kph ? Math.round(c.wind_kph / 3.6 * 10) / 10 : 0, // convert to m/s
     };
   } catch { return null; }
 }
@@ -72,30 +73,18 @@ export async function fetchCurrentWeather(county: string): Promise<CurrentWeathe
 export async function fetchForecast(county: string): Promise<WeatherForecast[]> {
   try {
     const d = await callWeatherProxy("forecast", county);
-    if (!d || d.error || !d.list) return [];
+    if (!d || d.error || !d.forecast?.forecastday) return [];
 
-    const daily: Record<string, any> = {};
-    for (const item of d.list) {
-      const date = item.dt_txt.split(" ")[0];
-      if (!daily[date]) {
-        daily[date] = { temps: [], humidities: [], rain: 0, desc: item.weather[0].description, icon: item.weather[0].icon, wind: [] };
-      }
-      daily[date].temps.push(item.main.temp);
-      daily[date].humidities.push(item.main.humidity);
-      daily[date].rain += (item.rain?.["3h"] || 0);
-      daily[date].wind.push(item.wind?.speed || 0);
-    }
-
-    return Object.entries(daily).map(([date, v]: [string, any]) => ({
-      date,
-      temp: Math.round((v.temps.reduce((a: number, b: number) => a + b, 0) / v.temps.length) * 10) / 10,
-      temp_min: Math.min(...v.temps),
-      temp_max: Math.max(...v.temps),
-      humidity: Math.round(v.humidities.reduce((a: number, b: number) => a + b, 0) / v.humidities.length),
-      rainfall: Math.round(v.rain * 10) / 10,
-      description: v.desc,
-      icon: v.icon,
-      windSpeed: Math.round((v.wind.reduce((a: number, b: number) => a + b, 0) / v.wind.length) * 10) / 10,
+    return d.forecast.forecastday.map((day: any) => ({
+      date: day.date,
+      temp: day.day.avgtemp_c,
+      temp_min: day.day.mintemp_c,
+      temp_max: day.day.maxtemp_c,
+      humidity: day.day.avghumidity,
+      rainfall: day.day.totalprecip_mm,
+      description: day.day.condition?.text || "",
+      icon: day.day.condition?.icon || "",
+      windSpeed: Math.round(day.day.maxwind_kph / 3.6 * 10) / 10,
     }));
   } catch { return []; }
 }
