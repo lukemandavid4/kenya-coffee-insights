@@ -1,62 +1,83 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
-interface User {
-  email: string;
-  name: string;
+interface Profile {
+  full_name: string;
+  role: "farmer" | "normal";
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  user: SupabaseUser | null;
+  profile: Profile | null;
+  login: (email: string, password: string) => Promise<string | null>;
+  signup: (name: string, email: string, password: string, role: "farmer" | "normal") => Promise<string | null>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("dcip_user");
-    if (stored) {
-      setUser(JSON.parse(stored));
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, role")
+      .eq("user_id", userId)
+      .single();
+    if (data) {
+      setProfile({ full_name: data.full_name, role: data.role as "farmer" | "normal" });
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setTimeout(() => fetchProfile(session.user.id), 0);
+      } else {
+        setProfile(null);
+      }
+      setIsLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem("dcip_users") || "[]");
-    const found = users.find((u: any) => u.email === email && u.password === password);
-    if (found) {
-      const userData = { email: found.email, name: found.name };
-      setUser(userData);
-      localStorage.setItem("dcip_user", JSON.stringify(userData));
-      return true;
-    }
-    return false;
+  const login = async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? error.message : null;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem("dcip_users") || "[]");
-    if (users.find((u: any) => u.email === email)) return false;
-    users.push({ name, email, password });
-    localStorage.setItem("dcip_users", JSON.stringify(users));
-    const userData = { email, name };
-    setUser(userData);
-    localStorage.setItem("dcip_user", JSON.stringify(userData));
-    return true;
+  const signup = async (name: string, email: string, password: string, role: "farmer" | "normal"): Promise<string | null> => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, role } },
+    });
+    return error ? error.message : null;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("dcip_user");
+    setProfile(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, profile, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

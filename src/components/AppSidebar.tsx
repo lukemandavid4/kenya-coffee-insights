@@ -1,8 +1,8 @@
 import {
-  BarChart3, TrendingUp, Map, CloudRain, Globe, Brain, Coffee, LogOut, Settings,
+  BarChart3, TrendingUp, Map, CloudRain, Globe, Brain, Coffee, LogOut, Sprout,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -22,13 +22,15 @@ const mainItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
+
+  const isFarmer = profile?.role === "farmer";
 
   return (
     <Sidebar collapsible="icon">
@@ -70,10 +72,37 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {isFarmer && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+              Farmer
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/harvest"
+                      end
+                      className="text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Sprout className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>My Harvest</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="border-t border-border/50 p-3">
         {!collapsed && user && (
-          <p className="mb-2 truncate text-xs text-muted-foreground">{user.email}</p>
+          <div className="mb-2">
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            {profile && <p className="truncate text-[10px] capitalize text-primary">{profile.role}</p>}
+          </div>
         )}
         <button
           onClick={handleLogout}

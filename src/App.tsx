@@ -12,6 +12,7 @@ import CountyMap from "./pages/CountyMap";
 import Weather from "./pages/Weather";
 import Market from "./pages/Market";
 import Insights from "./pages/Insights";
+import FarmerHarvest from "./pages/FarmerHarvest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const AppRoutes = () => (
     <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
     <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
     <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+    <Route path="/harvest" element={<ProtectedRoute><FarmerHarvest /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

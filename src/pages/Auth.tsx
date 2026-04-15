@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Coffee, LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { Coffee, LogIn, UserPlus, AlertCircle, Sprout, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Auth() {
@@ -9,10 +9,15 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"farmer" | "normal">("normal");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, signup } = useAuth();
+  const { login, signup, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) navigate("/dashboard", { replace: true });
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +26,12 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const ok = await login(email, password);
-        if (!ok) { setError("Invalid email or password"); setLoading(false); return; }
+        const err = await login(email, password);
+        if (err) { setError(err); setLoading(false); return; }
       } else {
         if (!name.trim()) { setError("Name is required"); setLoading(false); return; }
-        const ok = await signup(name, email, password);
-        if (!ok) { setError("An account with this email already exists"); setLoading(false); return; }
+        const err = await signup(name, email, password, role);
+        if (err) { setError(err); setLoading(false); return; }
       }
       navigate("/dashboard");
     } catch {
@@ -43,7 +48,6 @@ export default function Auth() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <Coffee className="h-7 w-7 text-primary-foreground" />
@@ -52,9 +56,7 @@ export default function Auth() {
           <p className="mt-1 text-sm text-muted-foreground">Deco Coffee Intelligence Platform</p>
         </div>
 
-        {/* Card */}
         <div className="glass-card p-6">
-          {/* Tabs */}
           <div className="mb-6 flex rounded-lg bg-secondary/50 p-1">
             <button
               onClick={() => { setIsLogin(true); setError(""); }}
@@ -85,17 +87,50 @@ export default function Auth() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full rounded-lg border border-input bg-secondary/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full rounded-lg border border-input bg-secondary/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    required={!isLogin}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-muted-foreground">I am a...</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRole("farmer")}
+                      className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
+                        role === "farmer"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      <Sprout className="h-6 w-6" />
+                      <span className="text-sm font-medium">Farmer</span>
+                      <span className="text-[10px] opacity-70">Record & track harvests</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole("normal")}
+                      className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
+                        role === "normal"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      <User className="h-6 w-6" />
+                      <span className="text-sm font-medium">Viewer</span>
+                      <span className="text-[10px] opacity-70">View predictions & data</span>
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Email</label>
