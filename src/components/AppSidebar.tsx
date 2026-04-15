@@ -17,6 +17,7 @@ const mainItems = [
   { title: "Weather Forecast", url: "/weather", icon: CloudRain },
   { title: "Market Forecast", url: "/market", icon: Globe },
   { title: "AI Predictions", url: "/insights", icon: Brain },
+  { title: "Community Harvest", url: "/community-harvest", icon: Sprout },
 ];
 
 export function AppSidebar() {
