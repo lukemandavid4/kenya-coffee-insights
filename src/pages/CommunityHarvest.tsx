@@ -108,9 +108,10 @@ export default function CommunityHarvest() {
               type="number"
               min="2000"
               max="2100"
+              placeholder="All years"
               value={filterYear}
-              onChange={e => setFilterYear(parseInt(e.target.value))}
-              className="w-24 rounded-lg border border-input bg-secondary/50 px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              onChange={e => setFilterYear(e.target.value === "" ? "" : parseInt(e.target.value))}
+              className="w-28 rounded-lg border border-input bg-secondary/50 px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
             />
           </div>
         </div>
