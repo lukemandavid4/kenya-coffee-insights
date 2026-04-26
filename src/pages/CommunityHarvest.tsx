@@ -22,8 +22,8 @@ export default function CommunityHarvest() {
   const [harvests, setHarvests] = useState<HarvestEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterMonth, setFilterMonth] = useState<number | "">(new Date().getMonth() + 1);
-  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [filterMonth, setFilterMonth] = useState<number | "">("");
+  const [filterYear, setFilterYear] = useState<number | "">("");
 
   useEffect(() => {
     const fetch = async () => {
